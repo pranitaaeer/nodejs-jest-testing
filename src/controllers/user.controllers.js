@@ -73,7 +73,7 @@ exports.login = async (req, res) => {
       { expiresIn: "30d" }
     );
     if (!accessToken) {
-      return res.status(400).json({ msg: "Token not gemnerated in login !" });
+      return res.status(400).json({ msg: "Token not generated in login !" });
     }
     res.cookie("token", accessToken, {
       maxAge: 1000 * 60 * 60 * 24 * 30,

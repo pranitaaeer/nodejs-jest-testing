@@ -3,7 +3,7 @@ jest.mock("bcrypt")
 jest.mock("jsonwebtoken")
 
 const user=require("../models/user.models")
-const {signup} =require("../controllers/user.controllers")
+const {signup,login} =require("../controllers/user.controllers")
 const bcrypt=require("bcrypt")
 const jwt =require("jsonwebtoken")
 
@@ -87,7 +87,6 @@ describe("signup controller",()=>{
         })
         
     })
-
     test("should return 400 when token generation fails",async () => {
         user.findOne.mockResolvedValue(null)
         bcrypt.hash.mockResolvedValue("hashed@123")
@@ -192,4 +191,139 @@ describe("signup controller",()=>{
             err:"Network Error"
         })
     })
+})
+
+describe("login controller",()=>{
+  test("should return 400 when email and password is missing",async () => {
+     const req={
+        body:{}
+     }
+     const res={
+        status:jest.fn().mockReturnThis(),
+        json:jest.fn()
+     }
+     await login(req,res)
+     expect(res.status).toHaveBeenCalledWith(400)
+     expect(res.json).toHaveBeenCalledWith({
+        msg:"Email and Password are required !"
+     })
+     expect(user.findOne).not.toHaveBeenCalled()
+  })
+
+  test("should return 400 when user is missing",async () => {
+    user.findOne.mockResolvedValue(null)
+    const req={
+        body:{
+            email:"pranu@gmail.com",
+            password:"pranu@1434" 
+        }
+     }
+    const res={
+        status:jest.fn().mockReturnThis(),
+        json:jest.fn()
+     }
+     await login(req,res)
+     expect(user.findOne).toHaveBeenCalledWith({
+        email:"pranu@gmail.com"
+     })
+      expect(res.status).toHaveBeenCalledWith(400)
+     expect(res.json).toHaveBeenCalledWith({
+        msg:"Please Signin first !"
+     })
+
+  })
+  test("should return 400 when password is incorrect",async () => {
+    user.findOne.mockResolvedValue({
+        _id:"123",
+        email:"pranu@gmail.com",
+        password:"hashed@123"
+    })
+    bcrypt.compare.mockResolvedValue(false)
+    const req={
+        body:{
+            email:"pranu@gmail.com",
+            password:"pranu@1434" 
+        }
+     }
+    const res={
+        status:jest.fn().mockReturnThis(),
+        json:jest.fn()
+     }
+     await login(req,res)
+     expect(user.findOne).toHaveBeenCalledWith({email:"pranu@gmail.com"})
+     expect(bcrypt.compare).toHaveBeenCalledWith("pranu@1434","hashed@123")
+     expect(res.status).toHaveBeenCalledWith(400)
+     expect(res.json).toHaveBeenCalledWith({
+        msg:"Incorrect credentials !"
+     })
+
+  })
+
+  test("should return 400 when Token not generated",async () => {
+    user.findOne.mockResolvedValue({
+        _id:"123",
+        email:"pranu@gmail.com",
+        password:"hashed@123"
+    })
+    bcrypt.compare.mockResolvedValue(true)
+    jwt.sign.mockReturnValue(null)
+    const req={
+        body:{
+            email:"pranu@gmail.com",
+            password:"pranu@1434" 
+        }
+     }
+    const res={
+        status:jest.fn().mockReturnThis(),
+        json:jest.fn(),
+        cookie:jest.fn()
+     }
+     await login(req,res)
+     expect(user.findOne).toHaveBeenCalledWith({email:"pranu@gmail.com"})
+     expect(bcrypt.compare).toHaveBeenCalledWith("pranu@1434","hashed@123")
+     expect(jwt.sign).toHaveBeenCalledWith({token:"123"},process.env.JWT_SECRET,{expiresIn:"30d"})
+     expect(res.cookie).not.toHaveBeenCalled()
+     expect(res.status).toHaveBeenCalledWith(400)
+     expect(res.json).toHaveBeenCalledWith({
+        msg:"Token not generated in login !"
+     })
+
+  })
+
+  test("should return 200 when user login successfully",async () => {
+    user.findOne.mockResolvedValue({
+        _id:"123",
+        email:"pranu@gmail.com",
+        password:"hashed@123"
+    })
+    bcrypt.compare.mockResolvedValue(true)
+    jwt.sign.mockReturnValue("accesstoken")
+    const req={
+        body:{
+            email:"pranu@gmail.com",
+            password:"pranu@1434" 
+        }
+     }
+    const res={
+        status:jest.fn().mockReturnThis(),
+        json:jest.fn(),
+        cookie:jest.fn()
+     }
+     await login(req,res)
+     expect(user.findOne).toHaveBeenCalledWith({email:"pranu@gmail.com"})
+     expect(bcrypt.compare).toHaveBeenCalledWith("pranu@1434","hashed@123")
+     expect(jwt.sign).toHaveBeenCalledWith({token:"123"},process.env.JWT_SECRET,{expiresIn:"30d"})
+     expect(res.cookie).toHaveBeenCalledWith("token","accesstoken",{
+      maxAge: 1000 * 60 * 60 * 24 * 30,
+      httpOnly: true,
+      secure: true,
+      sameSite: "none",
+    })
+     expect(res.status).toHaveBeenCalledWith(200)
+     expect(res.json).toHaveBeenCalledWith({
+        msg:"User logged in succcessfully !"
+     })
+
+  })
+
 })
