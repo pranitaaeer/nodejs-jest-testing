@@ -3,9 +3,10 @@ jest.mock("bcrypt")
 jest.mock("jsonwebtoken")
 
 const user=require("../models/user.models")
-const {signup,login} =require("../controllers/user.controllers")
+const {signup,login,myInfo} =require("../controllers/user.controllers")
 const bcrypt=require("bcrypt")
 const jwt =require("jsonwebtoken")
+const { json } = require("express")
 
 describe("signup controller",()=>{
     test("should return 400 when user is missing",async ()=>{
@@ -325,5 +326,52 @@ describe("login controller",()=>{
      })
 
   })
+  test("should return 500 when internal server err occur",async()=>{
+    user.findOne.mockRejectedValue(new Error("Internal server err"))
+    const req={
+        body:{
+            email:"pranu@gmail.com",
+            password:"pranu@1434" 
+        }
+    }
 
+    const res={
+        status:jest.fn().mockReturnThis(),
+        json:jest.fn()
+    }
+    await login(req,res)
+    expect(res.status).toHaveBeenCalledWith(500)
+    expect(res.json).toHaveBeenCalledWith({msg:"Error in login !",err:"Internal server err"})
+  })
+
+})
+
+describe("myinfo controller",()=>{
+    test("should return 200 when user fetch their info",async()=>{
+        const req={
+            _id:"123",
+            email:"pranu@gmail.com",
+            password:"hanshed@123"
+        }
+        const res={
+            status:jest.fn().mockReturnThis(),
+            json:jest.fn()
+        }
+        await myInfo(req,res)
+        expect(res.status).toHaveBeenCalledWith(200)
+        expect(res.json).toHaveBeenCalledWith({msg:req.user})
+
+    })
+
+    test("should return 500 when err in fetching myinfo",async()=>{
+        const req=null
+        const res={
+            status:jest.fn().mockReturnThis(),
+            json:jest.fn()
+        }
+        await myInfo(req,res)
+        expect(res.status).toHaveBeenCalledWith(500)
+        expect(res.json).toHaveBeenCalledWith({msg:"Error in myInfo !"})
+
+    })
 })

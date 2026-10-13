@@ -83,7 +83,7 @@ exports.login = async (req, res) => {
     });
     res.status(200).json({ msg: "User logged in succcessfully !" });
   } catch (err) {
-    res.status(400).json({ msg: "Error in login !", err: err.message });
+    res.status(500).json({ msg: "Error in login !", err: err.message });
   }
 };
 
@@ -107,7 +107,7 @@ exports.userDetails = async (req, res) => {
       });
     res.status(200).json({ msg: "User Details Fetched !", user });
   } catch (err) {
-    res.status(400).json({ msg: "Error in userDetails !", err: err.message });
+    res.status(500).json({ msg: "Error in userDetails !", err: err.message });
   }
 };
 
@@ -140,7 +140,7 @@ exports.followUser = async (req, res) => {
     );
     return res.status(201).json({ msg: `Following ${userExists.userName}` });
   } catch (err) {
-    res.status(400).json({ msg: "Error in followUser !", err: err.message });
+    res.status(500).json({ msg: "Error in followUser !", err: err.message });
   }
 };
 
@@ -190,7 +190,7 @@ exports.updateProfile = async (req, res) => {
     });
     res.status(201).json({ msg: "Profile updated successfully !" });
   } catch (err) {
-    res.status(400).json({ msg: "Error in updateProfile !", err: err.message });
+    res.status(500).json({ msg: "Error in updateProfile !", err: err.message });
   }
 };
 
@@ -205,7 +205,7 @@ exports.searchUser = async (req, res) => {
     });
     res.status(200).json({ msg: "Searched !", users });
   } catch (err) {
-    res.status(400).json({ msg: "Error in searchUser !", err: err.message });
+    res.status(500).json({ msg: "Error in searchUser !", err: err.message });
   }
 };
 
@@ -221,15 +221,14 @@ exports.logout = async (req, res) => {
 
     res.status(201).json({ msg: "You logged out !" });
   } catch (err) {
-    res.status(400).json({ msg: "Error in logout" });
+    res.status(500).json({ msg: "Error in logout" });
   }
 };
 
 exports.myInfo = async (req, res) => {
   try {
-    console.log("user:", req.user);
     res.status(200).json({ me: req.user });
   } catch (err) {
-    res.status(400).json({ msg: "Error in myInfo !" });
+    res.status(500).json({ msg: "Error in myInfo !" });
   }
 };
