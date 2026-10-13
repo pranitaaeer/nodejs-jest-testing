@@ -94,17 +94,7 @@ exports.userDetails = async (req, res) => {
       return res.status(400).json({ msg: "id is required !" });
     }
     const user = await User.findById(id)
-      .select("-password")
-      .populate("followers")
-      .populate({
-        path: "threads",
-        populate: [{ path: "likes" }, { path: "comments" }, { path: "admin" }],
-      })
-      .populate({ path: "replies", populate: { path: "admin" } })
-      .populate({
-        path: "reposts",
-        populate: [{ path: "likes" }, { path: "comments" }, { path: "admin" }],
-      });
+      
     res.status(200).json({ msg: "User Details Fetched !", user });
   } catch (err) {
     res.status(500).json({ msg: "Error in userDetails !", err: err.message });

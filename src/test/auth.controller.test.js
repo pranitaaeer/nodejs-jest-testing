@@ -3,7 +3,7 @@ jest.mock("bcrypt")
 jest.mock("jsonwebtoken")
 
 const user=require("../models/user.models")
-const {signup,login,myInfo,logout} =require("../controllers/user.controllers")
+const {signup,login,myInfo,logout,userDetails} =require("../controllers/user.controllers")
 const bcrypt=require("bcrypt")
 const jwt =require("jsonwebtoken")
 const { json } = require("express")
@@ -395,6 +395,76 @@ describe("logout controller",()=>{
         expect(res.status).toHaveBeenCalledWith(200)
         expect(res.json).toHaveBeenCalledWith({
             msg:"You logged out !"
+        })
+    })
+
+    test("should return 500 when internal sever err",async()=>{
+        const req={}
+        const res={
+            status:jest.fn().mockReturnThis(),
+            json:jest.fn()
+        }
+        await logout(req,res)
+        expect(res.status).toHaveBeenCalledWith(500)
+        expect(res.json).toHaveBeenCalledWith({
+            msg:"Error in logout"
+        })
+    })
+})
+
+describe("userDeatils controller",()=>{
+    test("should return 400 when id is missing",async () => {
+        const req={params:{}}
+        const res={
+            status:jest.fn().mockReturnThis(),
+            json:jest.fn()
+        }
+        await userDetails(req,res)
+        expect(res.status).toHaveBeenCalledWith(400)
+        expect(res.json).toHaveBeenCalledWith({
+            msg:"id is required !"
+        })
+        expect(user.findById).not.toHaveBeenCalled()
+    })
+
+    test("should return 200 when user fetch details",async () => {
+        user.findById.mockResolvedValue({
+            _id:"123",
+            email:"pranu@gmail",
+            username:"Pranita Aeer"
+        })
+        const req={
+            params:{
+                id:"123"
+            }
+        }
+        const res={
+            status:jest.fn().mockReturnThis(),
+            json:jest.fn()
+        }
+        await userDetails(req,res)
+        expect(user.findById).toHaveBeenCalledWith("123")
+        expect(res.status).toHaveBeenCalledWith(200)
+        expect(res.json).toHaveBeenCalledWith({
+            msg:"User Details Fetched !",
+            user:{
+            _id:"123",
+            email:"pranu@gmail",
+            username:"Pranita Aeer"}
+        })
+    })
+    test("should return 500 when internal sever err",async()=>{
+        user.findById.mockImplementation( ()=>{throw new Error("Internal Server err")})
+        const req={params:{id:"123"}}
+        const res={
+            status:jest.fn().mockReturnThis(),
+            json:jest.fn()
+        }
+        await userDetails(req,res)
+        expect(res.status).toHaveBeenCalledWith(500)
+        expect(res.json).toHaveBeenCalledWith({
+            msg:"Error in userDetails !",
+            err:"Internal Server err"
         })
     })
 })
