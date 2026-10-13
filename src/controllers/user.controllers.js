@@ -219,7 +219,7 @@ exports.logout = async (req, res) => {
       partitioned: true,
     });
 
-    res.status(201).json({ msg: "You logged out !" });
+    res.status(200).json({ msg: "You logged out !" });
   } catch (err) {
     res.status(500).json({ msg: "Error in logout" });
   }

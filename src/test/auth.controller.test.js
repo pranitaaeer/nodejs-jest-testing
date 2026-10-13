@@ -3,7 +3,7 @@ jest.mock("bcrypt")
 jest.mock("jsonwebtoken")
 
 const user=require("../models/user.models")
-const {signup,login,myInfo} =require("../controllers/user.controllers")
+const {signup,login,myInfo,logout} =require("../controllers/user.controllers")
 const bcrypt=require("bcrypt")
 const jwt =require("jsonwebtoken")
 const { json } = require("express")
@@ -373,5 +373,28 @@ describe("myinfo controller",()=>{
         expect(res.status).toHaveBeenCalledWith(500)
         expect(res.json).toHaveBeenCalledWith({msg:"Error in myInfo !"})
 
+    })
+})
+
+describe("logout controller",()=>{
+    test("should return 200 when user logout",async()=>{
+        const req={}
+        const res={
+            status:jest.fn().mockReturnThis(),
+            json:jest.fn(),
+            cookie:jest.fn() 
+        }
+        await logout(req,res)
+        expect(res.cookie).toHaveBeenCalledWith("token","",{
+            maxAge: 0,
+            httpOnly: true,
+            sameSite: "none",
+            secure: true,
+            partitioned: true,
+        })
+        expect(res.status).toHaveBeenCalledWith(200)
+        expect(res.json).toHaveBeenCalledWith({
+            msg:"You logged out !"
+        })
     })
 })
